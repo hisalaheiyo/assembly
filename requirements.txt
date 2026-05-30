@@ -1,0 +1,14 @@
+# Python dependencies for the code release.
+# PyTorch + torchvision are intentionally NOT pinned here — install the build
+# that matches your CUDA version from https://pytorch.org/get-started/locally/
+# (the code has been developed against PyTorch 2.x).
+
+numpy>=1.24
+scipy>=1.10
+pandas>=2.0
+matplotlib>=3.7
+Pillow>=10.0
+av>=11.0                 # PyAV — for fast frame seek/decode (MECCANO / IMPACT)
+tqdm>=4.65
+PyYAML>=6.0
+tensorboard>=2.14        # only used for training-time logging; optional
