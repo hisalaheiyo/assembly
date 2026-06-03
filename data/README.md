@@ -21,8 +21,8 @@ The defaults in `code/paths.py` look in `./data/{meccano,havid,impact}/`.
 
 - **Origin**: Ragusa et al., *MECCANO: A Multimodal Egocentric Dataset for
   Humans Behavior Understanding in the Industrial-Like Domain*, WACV 2021.
-- **Download**: 🚧 *Link to be added before camera-ready.* Use the request
-  form at the project page; we do not redistribute the data.
+- **Download**: <https://iplab.dmi.unict.it/MECCANO/> — use the request
+  form on the project page; we do not redistribute the data.
 - **Expected layout under `$MECCANO_DATA`**:
   ```
   $MECCANO_DATA/
@@ -65,9 +65,11 @@ every run reported in the paper.
 
 ## HAViD
 
-- **Origin**: see the dataset paper cited in our submission.
-- **Download**: 🚧 *Link to be added before camera-ready.* Per the dataset
-  authors' release policy.
+- **Origin**: Zheng, Lee, and Lu, *HA-ViD: A Human Assembly Video Dataset
+  for Comprehensive Assembly Knowledge Understanding*, NeurIPS 2023.
+- **Download**: <https://iai-hrc.github.io/ha-vid> — submit an access
+  request on the project page (the data is hosted on Dropbox); the
+  benchmarking code is at <https://github.com/iai-hrc/ha-vid>.
 - **Expected layout under `$HAVID_DATA`** (six (view, hand) subtasks plus
   the corresponding `_pt` variants, mirroring the upstream release):
   ```
@@ -105,9 +107,14 @@ verbatim — no randomness.
 
 ## IMPACT
 
-- **Origin**: see the dataset paper cited in our submission.
-- **Download**: 🚧 *Link to be added before camera-ready.* Per the dataset
-  authors' release policy.
+- **Origin**: Wen, Zhong, Schneider, Peng et al., *IMPACT: A Dataset for
+  Multi-Granularity Human Procedural Action Understanding in Industrial
+  Assembly*.
+- **Download**: <https://github.com/Kratos-Wen/IMPACT> — the project page
+  links to the full release bundles (annotations, multi-view RGB and depth
+  archives, ego audio, ego eye-tracking traces, feature packs, quick-start
+  sample subset). A public Hugging Face mirror of the release bundle is
+  available at `KratosWen/IMPACT` (use `huggingface_hub` to fetch).
 - **Expected layout under `$IMPACT_DATA`**:
   ```
   $IMPACT_DATA/

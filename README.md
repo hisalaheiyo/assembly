@@ -1,6 +1,5 @@
-# Diagnosing Verb–Noun Decomposition in Assembly Action Recognition
-
-**A Cross-Dataset Study of Compositional Generalization**
+# Reachability Is Not Generalization
+## Understanding Verb–Noun Decomposition in Assembly Action Recognition
 
 > Anonymous code release for double-blind review.
 > Author identities will be added in the camera-ready version.
@@ -12,111 +11,106 @@ that reproduce every number, table, and figure of the paper.
 
 ## Abstract
 
-Recognizing an assembly action means recognizing a *combination*: a manipulation
-applied to a part or tool. Atomic action classifiers cannot generalize to
-combinations they have not seen — they assign zero probability to every unseen
-(verb, noun) pair by construction. The field's escape is verb–noun
-decomposition: predict each component with its own head and recombine the
-scores, so the output spans the full composition grid. This design is adopted
-by convention and seldom tested as a hypothesis. We make its four tacit
-assumptions explicit — visual separability, statistical factorizability,
-symmetric per-component difficulty, and an appropriate factoring granularity —
-and pair each with a controlled diagnostic. On three assembly datasets
-(MECCANO, HAViD, IMPACT) that span egocentric and static views, single- and
-dual-handed manipulation, and two- to four-way factoring, decomposition
-escapes the atomic ceiling but realizes only part of the space it unlocks:
-unseen accuracy tracks training co-occurrence and is largely grid
-interpolation; failure concentrates on the larger-vocabulary component, which
-IMPACT's verb-heavy vocabulary flips from the usual object bottleneck to a
-verb one; and the common shared encoder forfeits much of the achievable gain
-by entangling the components, trailing independent recombination by up to
-$6.0\times$ in harmonic mean. Each diagnosis becomes a concrete design lever
-that is predictable from dataset statistics before training, and we release
-the diagnostics as a portable protocol.
+Assembly actions are compositional: they combine a manipulation with a part
+or tool. In deployment, systems routinely encounter novel combinations of
+familiar components, yet an atomic action classifier assigns every unseen
+combination exactly zero probability by construction. The prevailing
+solution is verb–noun decomposition, which predicts components separately
+and recombines them to reach unseen actions. While widely adopted, how
+decomposition generalizes under compositional shift remains poorly
+understood. We present a systematic analysis of verb–noun decomposition
+across three assembly datasets (MECCANO, HAViD, and IMPACT). Although
+decomposition escapes the *atomic ceiling*, its generalization extends only
+partially beyond it. Unseen-composition performance remains strongly tied to
+the co-occurrence structure of the training data, indicating that much of
+the observed gain arises from interpolation within densely supported regions
+of the compositional space rather than from unconstrained recombination.
+Across datasets, failures consistently concentrate on the larger-vocabulary
+component, and IMPACT's verb-heavy vocabulary reverses the bottleneck from
+nouns to verbs. We further show that shared-encoder training introduces
+component entanglement, encouraging reliance on co-occurrence patterns that
+transfer poorly to unseen compositions and trailing independent
+recombination by up to $6.0\times$ in harmonic mean. Taken together, these
+findings explain why decomposition achieves only partial compositional
+generalization in practice. By identifying **primitive support**,
+**vocabulary asymmetry**, and **component entanglement** as connected
+sources of error, we provide a portable diagnostic framework for studying
+compositional recognition beyond aggregate accuracy.
 
 ---
 
-## TL;DR
+## Highlights
 
-**Atomic action classifiers cannot generalize to unseen (verb, noun)
-combinations**: they assign probability $0$ to every held-out pair by
-construction. Some form of decomposition is therefore *necessary*, not
-optional, and the right question is not whether decomposition beats atomic
-prediction on average but **what limits compositional generalization once that
-ceiling has been removed**.
+**The atomic ceiling makes decomposition structurally necessary.** Atomic
+action classifiers assign probability zero to every unseen (verb, noun)
+combination by construction. Some form of decomposition is therefore not
+optional but required. The right question is not whether decomposition beats
+atomic prediction on average, but **what limits compositional generalization
+once that ceiling has been removed**.
 
-We audit verb–noun decomposition through four assumptions $\rightarrow$ four
-diagnostics, on three datasets (MECCANO, HAViD, IMPACT) and three reference
-architectures (atomic, shared encoder, independent recombination — the
-latter taken as the strongest realization and the primary diagnosed object):
+We organize the analysis around four research questions that proceed from
+phenomenon to localization, mechanism, and intervention:
 
-- **(A1) Visual separability** — Verbs / nouns can be recognized
-  independently. Tested by **D1**, the shortcut diagnostic.
-- **(A2) Statistical factorizability** — Per-component predictions
-  recombine without losing structure. Tested by **D2**, the
-  grid-density correlation.
-- **(A3) Symmetric per-component difficulty** — Neither component
-  dominates the error budget. Tested by **D3**, the per-component
-  error decomposition.
-- **(A4) Right granularity** — Two-way factoring is the appropriate
-  abstraction level. Tested by **D4**, the granularity Pareto sweep.
+- **RQ1 — Recombination or interpolation?**
+  Does the unseen-composition accuracy of decomposition reflect genuine
+  recombination, or interpolation within densely observed regions of the
+  composition space?
+- **RQ2 — Where do failures occur, and can the bottleneck be predicted?**
+  When decomposition errs on a novel composition, which component fails,
+  and is the dominant source of error predictable before training?
+- **RQ3 — Why does the shared encoder generalize worse?**
+  The field-standard shared encoder consistently trails independent
+  recombination. What mechanism drives this gap, and is it a capacity issue
+  or something else?
+- **RQ4 — Can the limitation be engineered away?**
+  Can changing the factorization granularity, the architecture, or the
+  training objective alleviate these limitations, or is the asymmetry
+  structural?
 
-We find:
+Our analysis surfaces three connected sources of error:
 
-1. **Unseen success is mostly coverage interpolation, not free
-   recombination.** Per-pair accuracy correlates strongly with each pair's
-   training co-occurrence ($\rho{=}0.49{-}0.69$).
-2. **Failure concentrates on the larger-vocabulary component**, identifiable
-   from vocabulary sizes before any training. IMPACT's verb-heavy vocabulary
-   flips the bottleneck from object to verb, confirming the regularity by
-   inversion.
-3. **The shared encoder forfeits a $2.2{-}6.0\times$ harmonic-mean gap** to
-   independent recombination, driven not by capacity (it carries fewer
-   parameters yet posts higher seen accuracy) but by **component entanglement**:
-   a co-occurrence shortcut that shared training writes into the encoder and
-   does not transfer to unseen pairs.
+1. **Primitive support drives unseen performance.** Per-pair unseen accuracy
+   correlates strongly with the training co-occurrence of its constituent
+   primitives ($\rho{=}0.49{-}0.69$, rising with grid density). Much of
+   decomposition's apparent compositional ability is interpolation from
+   dense coverage rather than free recombination.
+2. **Vocabulary asymmetry produces a predictable bottleneck.** Unseen
+   failures concentrate on the larger-vocabulary component on every dataset,
+   identifiable from vocabulary sizes alone before training. IMPACT's
+   verb-heavy vocabulary reverses the bottleneck from nouns to verbs,
+   overturning the common belief that the object is intrinsically the hard
+   part.
+3. **Component entanglement explains the shared-vs-independent gap.**
+   Shared training adds a non-transferable co-occurrence shortcut that
+   improves neither seen accuracy nor unseen transfer, leaving the harmonic
+   mean trailing independent recombination by up to $6.0\times$. The gap is
+   mechanistic, not a capacity deficit, and identifies architecture
+   (de-entanglement) as the dominant lever.
 
----
-
-## Research questions
-
-The paper follows a phenomenon $\rightarrow$ localization $\rightarrow$
-mechanism $\rightarrow$ intervention arc:
-
-| RQ  | Question | Diagnostic | Tests |
-|----:|----------|:----------:|:-----:|
-| **RQ1** | Is decomposition's unseen accuracy genuine recombination, or interpolation within densely observed regions of the compositional space? | D2 | A2 |
-| **RQ2** | Where do failures occur, and is the dominant source of error predictable before training? | D3 | A3 |
-| **RQ3** | Why does the field-standard shared encoder generalize worse than independent recombination? | D1 | A1 |
-| **RQ4** | Can the limitations be alleviated through alternative factorization granularities, architectures, or compositional objectives? | D4 | A4 |
-
----
-
-## Contributions
-
-1. **First systematic analysis of verb–noun decomposition under
-   compositional shift**, with a portable diagnostic toolkit that connects
-   observed behaviour to the assumptions underlying factorized action
-   recognition.
-2. **A predictable bottleneck identified by vocabulary structure**: the
-   larger-vocabulary component dominates unseen failure on every dataset,
-   independent of whether that component is the verb or the noun.
-3. **Component entanglement explains the shared/independent gap**, gives
-   architecture (de-entanglement) as the dominant lever, and yields practical
-   guidance for the design of compositional recognition systems.
+These three findings turn into concrete, dataset-predictable design levers:
+de-entangle the encoders, allocate capacity to the larger-vocabulary head,
+keep the two-way factoring, and calibrate on unseen compositions.
 
 ---
 
 ## Framework
 
-The three architectural variants compared throughout the paper:
+The three recognition formulations studied throughout the paper:
 
-![Framework](assets/F1_framework.png)
+![Framework](assets/assembly-framework.png)
 
-The same input segment feeds all three pipelines. Atomic's output space is a
-strict subset of the verb×noun grid, so $P(\text{unseen}){=}0$ for every
-unseen pair by construction; shared and independent both span the full grid,
-and the paper measures how much of that reachable space each realizes.
+Top: *atomic prediction*; middle: *shared decomposition*; bottom:
+*independent decomposition*. Given an input clip ($T{=}16$ frames), atomic
+prediction treats each action as a single class and predicts directly over
+the training action vocabulary $\mathcal{A}_{\text{train}}$. Shared
+decomposition predicts verbs and nouns using separate heads on a shared
+backbone, whereas independent decomposition trains one backbone per
+component and combines predictions through $\log P(v)+\log P(n)$. The
+coloured output boxes indicate the reachable output space of each
+formulation. Atomic prediction is restricted to actions observed during
+training, whereas both decomposition variants span the full
+verb $\times$ noun composition grid and can therefore assign probability to
+unseen compositions.
 
 ---
 
@@ -134,12 +128,13 @@ strongest comparator per dataset is highlighted):
 All numbers use a unified argmax-over-valid-pairs scoring rule
 ($\arg\max_{(v,n)} \log P(v){+}\log P(n)$).
 
-The paper additionally reports per-component breakdowns, ranking-based top-$K$
-recovery, the per-component shortcut diagnostic D1, the grid-density
-correlation D2, the per-component error decomposition D3, the granularity
-sweep D4, calibration with bootstrap CIs, a per-loss C2C objective ablation,
-and the standard-split breakdown — all reproducible from this repository (see
-*Reproducing paper exhibits* below).
+The paper additionally reports per-component breakdowns, ranking-based
+top-$K$ recovery, the per-component shortcut analysis (component
+entanglement), the grid-density correlation (primitive support), the
+per-component error decomposition (vocabulary asymmetry), the granularity
+sweep, calibration with bootstrap CIs, a per-loss compositional-objective
+ablation, and the standard-split breakdown — all reproducible from this
+repository (see *Reproducing the paper exhibits* below).
 
 ---
 
@@ -159,12 +154,12 @@ and the standard-split breakdown — all reproducible from this repository (see
 │   ├── train_*.py             training entry-points
 │   ├── eval_*.py /
 │   │   comprehensive_eval.py  evaluation passes that emit the JSON files used downstream
-│   ├── compute_d1b.py         diagnostic D1 (per-component shortcut)
-│   ├── compute_d2d3.py        diagnostics D2 (coverage) and D3 (error decomp)
-│   ├── make_tables.py         regenerate paper tables T1–T5
-│   ├── make_supp_tables.py    regenerate supplementary tables S1–S14
-│   ├── fig_F*.py              regenerate paper figures F2–F6
-│   ├── fig_supp.py            regenerate supplementary figures SF1–SF3
+│   ├── compute_d1b.py         per-component shortcut / entanglement analysis
+│   ├── compute_d2d3.py        primitive-support correlation + per-component error decomposition
+│   ├── make_tables.py         regenerate paper tables
+│   ├── make_supp_tables.py    regenerate supplementary tables
+│   ├── fig_F*.py              regenerate paper figures
+│   ├── fig_supp.py            regenerate supplementary figures
 │   └── plotstyle.py           shared matplotlib style
 │
 ├── data/
@@ -216,45 +211,46 @@ and dataset roots default to `./data/{meccano,havid,impact}`.
 
 ## Datasets
 
-Three datasets are used. Each has its own release agreement; **only download
-links and preparation instructions are provided here, no raw videos are
-redistributed.** See [`data/README.md`](data/README.md) for full step-by-step
-instructions.
+The paper uses three assembly datasets. Each has its own release agreement;
+**this repository does not redistribute raw videos**. Download each dataset
+from its original release page, then run the construction scripts in
+`data/scripts/` to reproduce the standard / compositional splits used in the
+paper (see [`data/README.md`](data/README.md) for the full step-by-step).
 
-| Dataset | View | Hands | Vocab (V / N) | Compositional split | Download |
-|---|---|---|---|---|---|
-| **MECCANO** | ego | single | 12 / 23 | 6 held-out (verb, object) pairs | [Project page (TBA)](#dataset-download-links) |
-| **HAViD**   | 3 static + ego | bimanual | 11 / 29 (+ target 25, tool 5) | 13 held-out (verb, manip-object) pairs | [Project page (TBA)](#dataset-download-links) |
-| **IMPACT**  | 5 (4 static + ego) | bimanual | 22 / 18 | 20 held-out pairs per hand | [Project page (TBA)](#dataset-download-links) |
+| Dataset | View | Hands | Vocab (V / N) | Original release |
+|---|---|---|---|---|
+| **MECCANO** | ego | single | 12 / 23 | <https://iplab.dmi.unict.it/MECCANO/> |
+| **HA-ViD** | 3 static + ego | bimanual | 11 / 29 | <https://iai-hrc.github.io/ha-vid> · code: <https://github.com/iai-hrc/ha-vid> |
+| **IMPACT** | 5 (4 static + ego) | bimanual | 22 / 18 | <https://github.com/Kratos-Wen/IMPACT> · HF mirror: `KratosWen/IMPACT` |
+
+> ℹ️ The dataset URLs above point to the original authors' releases.
+> Please obtain the data under their licence terms — we do not host or
+> mirror any video files. The pair-level split files that the paper
+> reports are reproduced by running the four scripts in
+> `data/scripts/` after the raw data is in place.
 
 ### Two evaluation regimes
 
-- **Standard split** — official train / val / test partition (or, for
-  IMPACT, a recording-level hand-stratified partition we construct via
-  iterative multilabel stratification). Every action class seen at test
-  time has appeared in training; this is the routine setting on which
-  decomposition's compositional behaviour is hidden.
-- **Compositional split** — a set of (verb, object) pairs is held out
-  from training, while every held-out verb and held-out object continues
-  to appear paired with other partners. This is the regime the paper
-  studies.
+- **Standard split** — the official train / val / test partition, or, for
+  IMPACT, a recording-level hand-stratified partition built via iterative
+  multilabel stratification. Every action class seen at test time has
+  appeared in training; this is the routine setting that hides
+  decomposition's compositional behaviour.
+- **Compositional split** — a fixed set of (verb, object) pairs is held out
+  from training. Every held-out verb and held-out object continues to appear
+  paired with other partners, so the task is recombination of familiar
+  primitives rather than discovery of new ones. This is the regime the
+  paper studies.
 
-Compositional splits are reproduced exactly by the construction scripts in
-`data/scripts/` (the held-out pair lists are hard-coded under fixed
-quantitative constraints; no randomness):
+Generate every split deterministically (no randomness; held-out pair lists
+are hard-coded in the scripts):
 
 ```bash
 python data/scripts/meccano_comp_split.py
 python data/scripts/havid_comp_split.py
+python data/scripts/impact_standard_split.py   # IMPACT only
 python data/scripts/impact_comp_split.py
-python data/scripts/impact_standard_split.py   # IMPACT only (standard split)
 ```
-
-### Dataset download links
-
-> 🚧 **To be added before the camera-ready release.** Each dataset has
-> independent licensing terms; the camera-ready version of this README
-> will link directly to each dataset's official project page.
 
 ---
 
@@ -290,12 +286,12 @@ Every script accepts `--help` and lists its required arguments.
 ### 2. Evaluate
 
 ```bash
-# Comprehensive evaluation pass (aggregates -> JSON used by D1/D2/D3 + S6)
+# Comprehensive evaluation pass (aggregates -> JSON used by analysis below)
 python code/comprehensive_eval.py --dataset meccano --tag meccano_indep
 python code/comprehensive_eval.py --dataset impact  --view front --hand left
 python code/comprehensive_eval.py --dataset havid   --subtask view0_lh_aa
 
-# Action-level argmax-pair scoring used by the paper anchor (T2)
+# Action-level argmax-pair scoring used by the paper anchor table
 python code/eval_impact_indep_action.py --view front --hand left
 python code/eval_meccano_indep_action.py
 
@@ -308,14 +304,14 @@ Each evaluation writes a small JSON under `${RESULTS_DIR}/<tag>/`.
 ### 3. Tables and figures
 
 ```bash
-python code/make_tables.py            # T1..T5 -> ${TABLES_DIR}/T*.tex
-python code/make_supp_tables.py       # S1..S14 -> ${TABLES_DIR}/S*.tex
+python code/make_tables.py            # paper tables -> ${TABLES_DIR}/T*.tex
+python code/make_supp_tables.py       # supplementary tables -> ${TABLES_DIR}/S*.tex
 
-python code/fig_F2_density.py         # F2 coverage scatter
-python code/fig_F3_bottleneck.py      # F3 component bottleneck
-python code/fig_F4_F5.py              # F4 granularity + F5 interventions
-python code/fig_F6_topk.py            # F6 top-K
-python code/fig_supp.py               # SF1..SF3
+python code/fig_F2_density.py         # primitive-support scatter
+python code/fig_F3_bottleneck.py      # component-bottleneck breakdown
+python code/fig_F4_F5.py              # granularity sweep + interventions
+python code/fig_F6_topk.py            # top-K recovery
+python code/fig_supp.py               # supplementary figures
 ```
 
 PDF figures land in `${FIGURES_DIR}/`.
@@ -335,19 +331,31 @@ mapping lives in `MANIFEST.json` inside the bundle.
 
 ### Download
 
+The bundle is published as six tar shards (`checkpoints.tar.part00` …
+`checkpoints.tar.part05`, each ~9 GB except the last) so it fits the
+per-file limits commonly imposed by intermediate transfer tools. Download
+all six, then concatenate and extract in one stream:
+
 ```bash
-# Option 1: huggingface_hub (recommended)
 pip install huggingface_hub
 huggingface-cli download <ANONYMOUS_REPO_ID> \
     --repo-type model --local-dir checkpoints/
 
-# Option 2: git-lfs
-git lfs install
-git clone https://huggingface.co/<ANONYMOUS_REPO_ID> checkpoints/
+# Reassemble + extract in one stream (does not produce a 49 GB intermediate file)
+cd checkpoints/
+cat checkpoints.tar.part* | tar -xf -
+
+# Optional: remove the shards once extraction succeeds
+rm checkpoints.tar.part*
 ```
 
-After download, `checkpoints/` will contain one directory per configuration
+After extraction, `checkpoints/` contains one directory per configuration
 tag, mirroring the layout the scripts expect — no path rewriting is needed.
+
+> `<ANONYMOUS_REPO_ID>` is a placeholder for the actual Hugging Face Hub
+> repository identifier (of the form `<username>/<repo-name>`, e.g.
+> `anonymous-vn-decomp/checkpoints`). It will be replaced with the real
+> identifier once the bundle is uploaded.
 
 ### Expected layout
 
@@ -359,14 +367,14 @@ checkpoints/
 ├── meccano_comp_indep_{verb,noun}/best.pth  MECCANO Independent component heads
 ├── meccano_mvitv2_{action,multihead}/       MECCANO standard split
 ├── c2c_{shared,indep}_meccano/              MECCANO C2C variants
-├── c2c_shared_meccano_abl_*/                S8 C2C objective ablation
-├── meccano_comp_shared_s{1,7}/              S8(b) multi-seed
+├── c2c_shared_meccano_abl_*/                MECCANO C2C objective ablation
+├── meccano_comp_shared_s{1,7}/              MECCANO multi-seed
 ├── impact_{view}_{hand}_{action,multihead}/ IMPACT standard split (10 configs)
 ├── impact_comp_{view}_{hand}/               IMPACT shared comp
 ├── impact_compvar_{action,verb_only,noun_only}_*/  IMPACT atomic + per-component
 ├── c2c_{shared,indep}_impact_{view}_{hand}/        IMPACT C2C variants
-├── havid_gran_k{1,2,3}_<subtask>/           HAViD granularity (k=4 results JSON-only)
-├── havid_gran_solo_{verb,manip}_<subtask>/  HAViD solo heads (D1 diagnostic)
+├── havid_gran_k{1,2,3}_<subtask>/           HAViD granularity (k=4 results-JSON only)
+├── havid_gran_solo_{verb,manip}_<subtask>/  HAViD solo heads (entanglement analysis)
 ├── c2c_{shared,indep}_havid_<subtask>/      HAViD C2C variants
 └── mvitv2_comp_<subtask>/                   HAViD shared multi-head backbone
 ```
@@ -379,10 +387,10 @@ view1_lh_aa, view1_rh_aa, view2_lh_aa, view2_rh_aa}`.
 ### What's *not* in the bundle
 
 - HAViD `k=4` granularity checkpoints (`havid_gran_k4_*`): the underlying
-  ckpts were cleaned after the per-configuration evaluation JSONs were
-  produced. The `havid_gran_k4_*/comp_eval.json` numbers used in Table T5
-  remain reproducible from the per-config JSON, but the k=4 model cannot be
-  re-instantiated for fresh inference; rerun
+  `.pth` files were cleaned after the per-configuration evaluation JSONs
+  were produced. The `havid_gran_k4_*/comp_eval.json` numbers used in the
+  granularity table remain reproducible from the per-config JSON, but the
+  k=4 model cannot be re-instantiated for fresh inference; rerun
   `python code/train_havid_granularity.py --config k4 ...` to regenerate.
 
 ---
@@ -392,18 +400,19 @@ view1_lh_aa, view1_rh_aa, view2_lh_aa, view2_rh_aa}`.
 We use a single backbone family (MViTv2-S, Kinetics-400 pretrained) and a
 linear classifier head per component, so every reported difference reflects
 the paradigm rather than the encoder. Input clips are decoded into 16 RGB
-frames at 224² resolution with standard augmentation. Optimization uses AdamW
-with cosine schedule after linear warm-up. Atomic / shared / k-way /
+frames at 224² resolution with standard augmentation. Optimization uses
+AdamW with cosine schedule after linear warm-up. Atomic / shared / k-way /
 independent backbones train for 50 epochs on MECCANO and IMPACT and 100 on
 HAViD; the C2C variants follow the protocol of the original C2C method
 (C2C-shared 100 epochs end-to-end; C2C-indep two-stage, training a
 lightweight head on top of frozen Independent backbones for 200 head-only
-epochs). No unseen pair ever enters training (the compositional split removes
-them from `comp_train` by construction); only checkpoint selection varies
-between configurations — atomic and per-component Indep heads use seen-only
-validation, while joint shared multi-head models and both C2C variants use
-the harmonic mean of seen and unseen action top-1, the standard CZSL
-selection protocol on splits without a separate held-out test partition.
+epochs). No unseen pair ever enters training (the compositional split
+removes them from `comp_train` by construction); only checkpoint selection
+varies between configurations — atomic and per-component Indep heads use
+seen-only validation, while joint shared multi-head models and both C2C
+variants use the harmonic mean of seen and unseen action top-1, the
+standard CZSL selection protocol on splits without a separate held-out test
+partition.
 
 ---
 
@@ -412,8 +421,8 @@ selection protocol on splits without a separate held-out test partition.
 Citation block will be added in the camera-ready release. For the review
 period, please refer to the submission with the anonymous title:
 
-> *Diagnosing Verb–Noun Decomposition in Assembly Action Recognition: A
-> Cross-Dataset Study of Compositional Generalization.*
+> *Reachability Is Not Generalization: Understanding Verb–Noun Decomposition
+> in Assembly Action Recognition.*
 
 ---
 
