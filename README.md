@@ -122,7 +122,6 @@ strongest comparator per dataset is highlighted):
 | **IMPACT**   |  0.0   | 10.6   |   **31.2**  |   22.1     |   30.9    |
 
 All numbers use a unified argmax-over-valid-pairs scoring rule:
-
 $$\arg\max_{(v,n)\,\in\,\mathcal{V}\times\mathcal{N}} \bigl[\log P(v) + \log P(n)\bigr]$$
 
 The paper additionally reports per-component breakdowns, ranking-based
