@@ -21,7 +21,8 @@ The defaults in `code/paths.py` look in `./data/{meccano,havid,impact}/`.
 
 - **Origin**: Ragusa et al., *MECCANO: A Multimodal Egocentric Dataset for
   Humans Behavior Understanding in the Industrial-Like Domain*, WACV 2021.
-- **Download**: follow the request form at the project page.
+- **Download**: 🚧 *Link to be added before camera-ready.* Use the request
+  form at the project page; we do not redistribute the data.
 - **Expected layout under `$MECCANO_DATA`**:
   ```
   $MECCANO_DATA/
@@ -40,18 +41,33 @@ The defaults in `code/paths.py` look in `./data/{meccano,havid,impact}/`.
 
 ### Compositional split
 
-The 6 held-out (verb, object) pairs are hard-coded in
-`code/train_meccano_comp_atomic.py` / `train_meccano_comp.py` (look for the
-`HELD_OUT` constant). No external script is needed — the split list is the
-same for every run.
+Run the construction script once to build the three split CSVs (6 held-out
+(verb, primary-noun) pairs):
+
+```bash
+python data/scripts/meccano_comp_split.py
+```
+
+This writes:
+
+```
+$MECCANO_DATA/comp_split/
+├── comp_train.csv
+├── comp_val_seen.csv
+├── comp_val_unseen.csv
+└── split_metadata.json
+```
+
+The held-out pair list is hard-coded inside the script and is the same for
+every run reported in the paper.
 
 ---
 
 ## HAViD
 
-- **Origin**: HAViD: a *Hand-Action Video Dataset*. See the dataset paper
-  cited in our submission.
-- **Download**: per the dataset authors.
+- **Origin**: see the dataset paper cited in our submission.
+- **Download**: 🚧 *Link to be added before camera-ready.* Per the dataset
+  authors' release policy.
 - **Expected layout under `$HAVID_DATA`** (six (view, hand) subtasks plus
   the corresponding `_pt` variants, mirroring the upstream release):
   ```
@@ -71,64 +87,64 @@ same for every run.
 ### Compositional split
 
 Run the construction script once to generate the three new
-`*_comp_train.txt`, `*_comp_val_seen.txt`, `*_comp_val_unseen.txt` files for
-every subtask:
+`*_comp_train.txt`, `*_comp_val_seen.txt`, `*_comp_val_unseen.txt` files
+alongside the upstream list files (originals are not modified):
 
 ```bash
 python data/scripts/havid_comp_split.py
 ```
 
-This script
-
-1. picks 13 held-out (verb, manip-object) pairs under fixed quantitative
-   constraints (≥ 15 occurrences each, the held-out verb still pairs with
-   ≥ 5 other objects, the held-out object still pairs with ≥ 3 other verbs);
-2. verifies the constraints on the dataset before writing anything;
-3. writes the new split files alongside the upstream list files (the
-   originals are not modified).
-
-The selected pairs are reproducible verbatim — there is no randomness; the
-same 13 pairs are used in every run reported in the paper.
+The script (1) picks 13 held-out (verb, manip-object) pairs under fixed
+quantitative constraints (≥ 15 occurrences each, the held-out verb still
+pairs with ≥ 5 other objects, the held-out object still pairs with ≥ 3 other
+verbs), (2) verifies the constraints on the full dataset before writing
+anything, (3) writes the new split files. The selected pairs are reproducible
+verbatim — no randomness.
 
 ---
 
 ## IMPACT
 
 - **Origin**: see the dataset paper cited in our submission.
-- **Download**: per the dataset authors.
+- **Download**: 🚧 *Link to be added before camera-ready.* Per the dataset
+  authors' release policy.
 - **Expected layout under `$IMPACT_DATA`**:
   ```
   $IMPACT_DATA/
   ├── videos/
-  │   ├── front/
-  │   ├── left/
-  │   ├── right/
-  │   ├── top/
-  │   └── ego/
+  │   ├── front/  left/  right/  top/  ego/
   └── annotations/
       └── TAS-B/
-          ├── splits_v1/         standard split (left/, right/) + split_stats.json
-          ├── front/             per-view per-segment annotations
-          ├── left/
-          ├── right/
-          ├── top/
-          └── ego/
+          ├── splits_v1/        standard split (left/, right/) + split_stats.json
+          ├── comp_split_v1/    compositional split files (generated)
+          ├── front/  left/  right/  top/  ego/    per-view per-segment annotations
   ```
 
-### Standard split (constructed here)
+### Standard split
 
-The recording-level, hand-stratified standard partition (~70/15/15%) is built
-via iterative multilabel stratification by the training code on first run;
-the resulting `splits_v1/<hand>/{train,val,test}.txt` files are persisted
-and re-used.
+The recording-level hand-stratified standard partition (~70/15/15%) is built
+via iterative multilabel stratification. Run once:
 
-### Compositional split (constructed here)
+```bash
+python data/scripts/impact_standard_split.py
+```
 
-20 of 134 (verb, noun) pairs per hand are held out (≈ 14.9 %; each held-out
-pair has at least 10 segments). The held-out pair list is the same for every
-run and is recreated by `code/train_impact_comp.py` on first invocation
-(it writes `comp_train.txt`, `comp_val_seen.txt`, `comp_val_unseen.txt`
-under each per-view annotation directory).
+This populates `$IMPACT_DATA/annotations/TAS-B/splits_v1/{left,right}/{train,val,test}.txt`
+and a `split_stats.json` summarising per-split counts. The stratifier seed is
+fixed inside the script, so successive runs produce byte-identical splits.
+
+### Compositional split
+
+20 of 134 (verb, noun) pairs per hand are held out (≈ 14.9%; each held-out
+pair has ≥ 10 segments). Run once:
+
+```bash
+python data/scripts/impact_comp_split.py
+```
+
+This writes `comp_train.txt`, `comp_val_seen.txt`, `comp_val_unseen.txt`
+under the per-view annotation directories. The held-out pair list is fixed in
+the script (no randomness).
 
 ---
 
@@ -136,8 +152,8 @@ under each per-view annotation directory).
 
 The `data/splits/{meccano,havid,impact}/` subdirectories are intentionally
 empty in the repository. They are populated by the construction scripts above
-the first time you run training, and contain plain-text segment lists only
-(no media). Generated splits are deterministic across runs.
+the first time you run them, and contain plain-text segment lists only
+(no media). Every generated split is deterministic across runs.
 
 ---
 
@@ -147,9 +163,8 @@ After preparing all three datasets, the following should succeed without
 error and print the configured roots:
 
 ```bash
+cd code   # so that paths.py is importable
 python -c "from paths import MECCANO_DATA, HAVID_DATA, IMPACT_DATA, PROJECT_DIR; \
 print('MECCANO_DATA =', MECCANO_DATA); print('HAVID_DATA   =', HAVID_DATA); \
 print('IMPACT_DATA  =', IMPACT_DATA); print('PROJECT_DIR  =', PROJECT_DIR)"
 ```
-
-(Run from inside the `code/` directory, or add `code/` to `PYTHONPATH`.)
