@@ -1,4 +1,8 @@
-# Reachability Is Not Generalization: Understanding Verb–Noun Decomposition in Assembly Action Recognition
+# Reachability Is Not Generalization
+## Understanding Verb–Noun Decomposition in Assembly Action Recognition
+
+> Anonymous code release for double-blind review.
+> Author identities will be added in the camera-ready version.
 
 This repository contains the code, generated splits, and analysis pipelines
 that reproduce every number, table, and figure of the paper.
@@ -122,6 +126,7 @@ strongest comparator per dataset is highlighted):
 | **IMPACT**   |  0.0   | 10.6   |   **31.2**  |   22.1     |   30.9    |
 
 All numbers use a unified argmax-over-valid-pairs scoring rule:
+
 $$\arg\max_{(v,n)\,\in\,\mathcal{V}\times\mathcal{N}} \bigl[\log P(v) + \log P(n)\bigr]$$
 
 The paper additionally reports per-component breakdowns, ranking-based
@@ -318,26 +323,22 @@ PDF figures land in `${FIGURES_DIR}/`.
 
 We release **142 pre-trained checkpoints** (one `best.pth` per dataset ×
 configuration × view × hand) covering every experiment reported in the paper.
-Together they consume ~49 GB; the full inventory and per-checkpoint role
-mapping lives in `MANIFEST.json` inside the bundle.
-
-> 📦 **Checkpoint bundle (Hugging Face Hub)**: 🚧 *Link to be added before
-> camera-ready.* The bundle is hosted as a Hugging Face model repository
-> (anonymous account during the review period).
+Together they consume ~49 GB, distributed as six ~9 GB tar shards
+(`checkpoints.tar.part00` … `checkpoints.tar.part05`); the full inventory and
+per-checkpoint role mapping lives in `MANIFEST.json` inside the bundle.
 
 ### Download
 
-The bundle is published as six tar shards (`checkpoints.tar.part00` …
-`checkpoints.tar.part05`, each ~9 GB except the last) so it fits the
-per-file limits commonly imposed by intermediate transfer tools. Download
-all six, then concatenate and extract in one stream:
+🤗 **Hugging Face Hub**: <https://huggingface.co/<ANONYMOUS_REPO_ID>>
+
+Fetch the shards from the Hub, then reassemble and extract in one stream:
 
 ```bash
 pip install huggingface_hub
 huggingface-cli download <ANONYMOUS_REPO_ID> \
     --repo-type model --local-dir checkpoints/
 
-# Reassemble + extract in one stream (does not produce a 49 GB intermediate file)
+# Reassemble + extract in one stream (no 49 GB intermediate file)
 cd checkpoints/
 cat checkpoints.tar.part* | tar -xf -
 
@@ -347,11 +348,6 @@ rm checkpoints.tar.part*
 
 After extraction, `checkpoints/` contains one directory per configuration
 tag, mirroring the layout the scripts expect — no path rewriting is needed.
-
-> `<ANONYMOUS_REPO_ID>` is a placeholder for the actual Hugging Face Hub
-> repository identifier (of the form `<username>/<repo-name>`, e.g.
-> `anonymous-vn-decomp/checkpoints`). It will be replaced with the real
-> identifier once the bundle is uploaded.
 
 ### Expected layout
 
@@ -369,7 +365,7 @@ checkpoints/
 ├── impact_comp_{view}_{hand}/               IMPACT shared comp
 ├── impact_compvar_{action,verb_only,noun_only}_*/  IMPACT atomic + per-component
 ├── c2c_{shared,indep}_impact_{view}_{hand}/        IMPACT C2C variants
-├── havid_gran_k{1,2,3}_<subtask>/           HAViD granularity (k=4 results-JSON only)
+├── havid_gran_k{1,2,3}_<subtask>/           HAViD granularity
 ├── havid_gran_solo_{verb,manip}_<subtask>/  HAViD solo heads (entanglement analysis)
 ├── c2c_{shared,indep}_havid_<subtask>/      HAViD C2C variants
 └── mvitv2_comp_<subtask>/                   HAViD shared multi-head backbone
@@ -379,36 +375,6 @@ Configuration tags exactly match the experiment names used by the training
 and evaluation scripts. `<view> ∈ {front, left, right, top, ego}`,
 `<hand> ∈ {left, right}`, `<subtask> ∈ {view0_lh_aa, view0_rh_aa,
 view1_lh_aa, view1_rh_aa, view2_lh_aa, view2_rh_aa}`.
-
-### What's *not* in the bundle
-
-- HAViD `k=4` granularity checkpoints (`havid_gran_k4_*`): the underlying
-  `.pth` files were cleaned after the per-configuration evaluation JSONs
-  were produced. The `havid_gran_k4_*/comp_eval.json` numbers used in the
-  granularity table remain reproducible from the per-config JSON, but the
-  k=4 model cannot be re-instantiated for fresh inference; rerun
-  `python code/train_havid_granularity.py --config k4 ...` to regenerate.
-
----
-
-## Method ingredients (one-paragraph reference)
-
-We use a single backbone family (MViTv2-S, Kinetics-400 pretrained) and a
-linear classifier head per component, so every reported difference reflects
-the paradigm rather than the encoder. Input clips are decoded into 16 RGB
-frames at 224² resolution with standard augmentation. Optimization uses
-AdamW with cosine schedule after linear warm-up. Atomic / shared / k-way /
-independent backbones train for 50 epochs on MECCANO and IMPACT and 100 on
-HAViD; the C2C variants follow the protocol of the original C2C method
-(C2C-shared 100 epochs end-to-end; C2C-indep two-stage, training a
-lightweight head on top of frozen Independent backbones for 200 head-only
-epochs). No unseen pair ever enters training (the compositional split
-removes them from `comp_train` by construction); only checkpoint selection
-varies between configurations — atomic and per-component Indep heads use
-seen-only validation, while joint shared multi-head models and both C2C
-variants use the harmonic mean of seen and unseen action top-1, the
-standard CZSL selection protocol on splits without a separate held-out test
-partition.
 
 ---
 
