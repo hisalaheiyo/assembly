@@ -67,7 +67,7 @@ Our analysis surfaces three connected sources of error:
 
 1. **Primitive support drives unseen performance.** Per-pair unseen accuracy
    correlates strongly with the training co-occurrence of its constituent
-   primitives ($\rho{=}0.49{-}0.69$, rising with grid density). Much of
+   primitives ($\rho = 0.49$ to $0.69$, rising with grid density). Much of
    decomposition's apparent compositional ability is interpolation from
    dense coverage rather than free recombination.
 2. **Vocabulary asymmetry produces a predictable bottleneck.** Unseen
@@ -96,7 +96,7 @@ The three recognition formulations studied throughout the paper:
 ![Framework](assets/assembly-framework.png)
 
 Top: *atomic prediction*; middle: *shared decomposition*; bottom:
-*independent decomposition*. Given an input clip ($T{=}16$ frames), atomic
+*independent decomposition*. Given an input clip ($T = 16$ frames), atomic
 prediction treats each action as a single class and predicts directly over
 the training action vocabulary $\mathcal{A}_{\text{train}}$. Shared
 decomposition predicts verbs and nouns using separate heads on a shared
@@ -121,8 +121,8 @@ strongest comparator per dataset is highlighted):
 | **HAViD**    |  0.0   | 13.7   |   **30.2**  |   28.9     |   30.7    |
 | **IMPACT**   |  0.0   | 10.6   |   **31.2**  |   22.1     |   30.9    |
 
-All numbers use a unified argmax-over-valid-pairs scoring rule
-($\arg\max_{(v,n)} \log P(v){+}\log P(n)$).
+All numbers use a unified argmax-over-valid-pairs scoring rule:
+$$\arg\max_{(v,n)\,\in\,\mathcal{V}\times\mathcal{N}} \bigl[\log P(v) + \log P(n)\bigr]$$
 
 The paper additionally reports per-component breakdowns, ranking-based
 top-$K$ recovery, the per-component shortcut analysis (component
