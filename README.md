@@ -1,8 +1,4 @@
-# Reachability Is Not Generalization
-## Understanding Verb–Noun Decomposition in Assembly Action Recognition
-
-> Anonymous code release for double-blind review.
-> Author identities will be added in the camera-ready version.
+# Reachability Is Not Generalization: Understanding Verb–Noun Decomposition in Assembly Action Recognition
 
 This repository contains the code, generated splits, and analysis pipelines
 that reproduce every number, table, and figure of the paper.
