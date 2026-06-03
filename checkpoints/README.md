@@ -3,14 +3,14 @@
 This directory is empty in the source repository. The published checkpoint
 bundle is hosted on the Hugging Face Hub:
 
-🤗 <https://huggingface.co/<ANONYMOUS_REPO_ID>>
+🤗 <https://huggingface.co/assembly-verbnoun/assembly-ckpt1>
 
 The bundle is split into six ~9 GB tar shards; download them, then
 reassemble and extract:
 
 ```bash
 pip install huggingface_hub
-huggingface-cli download <ANONYMOUS_REPO_ID> --repo-type model --local-dir .
+huggingface-cli download assembly-verbnoun/assembly-ckpt1 --repo-type model --local-dir .
 
 # stream-concat + extract (no 49 GB intermediate file)
 cat checkpoints.tar.part* | tar -xf -

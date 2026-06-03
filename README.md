@@ -1,4 +1,8 @@
-# Reachability Is Not Generalization: Understanding Verb–Noun Decomposition in Assembly Action Recognition
+# Reachability Is Not Generalization
+## Understanding Verb–Noun Decomposition in Assembly Action Recognition
+
+> Anonymous code release for double-blind review.
+> Author identities will be added in the camera-ready version.
 
 This repository contains the code, generated splits, and analysis pipelines
 that reproduce every number, table, and figure of the paper.
@@ -325,13 +329,13 @@ per-checkpoint role mapping lives in `MANIFEST.json` inside the bundle.
 
 ### Download
 
-🤗 **Hugging Face Hub**: <https://huggingface.co/<ANONYMOUS_REPO_ID>>
+🤗 **Hugging Face Hub**: <https://huggingface.co/assembly-verbnoun/assembly-ckpt1>
 
 Fetch the shards from the Hub, then reassemble and extract in one stream:
 
 ```bash
 pip install huggingface_hub
-huggingface-cli download <ANONYMOUS_REPO_ID> \
+huggingface-cli download assembly-verbnoun/assembly-ckpt1 \
     --repo-type model --local-dir checkpoints/
 
 # Reassemble + extract in one stream (no 49 GB intermediate file)
